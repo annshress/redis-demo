@@ -1,0 +1,5 @@
+*.idea*
+*thumbnails*
+*__pycache*
+*.pyc
+db.sqlite3
