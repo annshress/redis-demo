@@ -1,0 +1,11 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coupon Detail</title>
+</head>
+<body>
+    {%  for obj in coupon %}
+        <b>{{  obj.name }}</b> was {{ obj.created_on }} and it was of type "{{ obj.type }}".  {{ time }}<br>
+    {%  endfor %}
+</body>
+</html>
