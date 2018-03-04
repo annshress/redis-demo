@@ -1,9 +1,11 @@
+from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 from django.views.generic import TemplateView
-
+from django.views.generic.list import ListView
+from django.utils import timezone
 from .forms import TaskForm
-from .tasks import get_url_words, scheduled_get_url_words, get_title_change
-from .models import Task,ScheduledTask
+from .tasks import get_url_words, scheduled_get_url_words, get_title_change, change_coupon_type
+from .models import Task, ScheduledTask, Coupon
 from rq.job import Job
 import django_rq
 import datetime
@@ -25,13 +27,13 @@ class TasksHomeFormView(FormView):
         url = form.cleaned_data['url']
         schedule_times = form.cleaned_data.get('schedule_times')
         schedule_interval = form.cleaned_data.get('schedule_interval')
-        time = datetime.datetime.now()
+        timenow = datetime.datetime.now()
 
         if schedule_times and schedule_interval:
             # Schedule the job with the form parameters
             scheduler = django_rq.get_scheduler('default')
             job = scheduler.schedule(
-                scheduled_time=datetime.timedelta(seconds=20),
+                scheduled_time=timenow+ datetime.timedelta(seconds=20),
                 func=scheduled_get_url_words,
                 args=[url],
                 interval=schedule_interval,
@@ -41,7 +43,7 @@ class TasksHomeFormView(FormView):
             # Just execute the job asynchronously
             scheduler = django_rq.get_scheduler('default')
             # job = scheduler.enqueue_at(time+datetime.timedelta(seconds=10), get_url_words, url)
-            job = scheduler.enqueue_at(time+datetime.timedelta(seconds=20), get_title_change, url)
+            job = scheduler.enqueue_at(timenow+datetime.timedelta(seconds=20), get_title_change, url)
 
         return super(TasksHomeFormView, self).form_valid(form)
 
@@ -71,3 +73,25 @@ class JobTemplateView(TemplateView):
 
         ctx['job'] = job
         return ctx
+
+
+class CouponView(ListView):
+    model = Coupon
+    template_name = "coupon_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(CouponView, self).get_context_data(**kwargs)
+        context['coupon'] = Coupon.objects.all()
+        context['time'] = timezone.now()
+        return context
+
+
+class CouponDetailView(DetailView):
+    model = Coupon
+    queryset = Coupon.objects.all()
+    template_name = 'a_coupon_detail.html'
+    pk_url_kwarg = 'coupon_id'
+
+    def get_context_data(self, **kwargs):
+        context = super(CouponDetailView, self).get_context_data(**kwargs)
+        return context
