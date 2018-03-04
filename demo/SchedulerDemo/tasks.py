@@ -1,8 +1,12 @@
+import datetime
 import requests
-from .models import Task, ScheduledTask, ScheduledTaskInstance
+from django.utils import timezone
+
+from SchedulerDemo.models import Coupon
+from .models import Task, ScheduledTask, ScheduledTaskInstance, GET, SAVE
 from rq import get_current_job
 from django_rq import job
-
+import time
 
 @job
 def get_url_words(url):
@@ -64,3 +68,15 @@ def get_title_change(url):
     )
 
     return task.result
+
+@job
+def change_coupon_type():
+    timenow = timezone.now()
+    count=0
+    for coupon in Coupon.objects.filter(type=SAVE):
+        if timenow - coupon.created_on >= datetime.timedelta(minutes=2):
+            coupon.type = GET
+            count +=1
+            coupon.save()
+    return count
+
