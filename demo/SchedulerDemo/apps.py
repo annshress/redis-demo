@@ -9,10 +9,16 @@ class SchedulerdemoConfig(AppConfig):
     def ready(self):
         import django_rq
         from SchedulerDemo.tasks import change_coupon_type
-        timenow = datetime.datetime.now()
+
         scheduler = django_rq.get_scheduler('default')
-        job = scheduler.schedule(
-            scheduled_time=timenow,
-            func=change_coupon_type,
-            interval=5,
-        )
+        print(scheduler.get_jobs())
+        if bool(scheduler.get_jobs()):
+            pass
+        else:
+            job = scheduler.schedule(
+                scheduled_time=datetime.datetime.now(),
+                func=change_coupon_type,
+                interval=70,
+                )
+        print (scheduler.get_jobs())
+
